@@ -1,121 +1,97 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
 import './App.css'
 
+const DAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [habits, setHabits] = useState(() => {
+    const savedHabits = localStorage.getItem('habits')
+    return savedHabits ? JSON.parse(savedHabits) : []
+  })
+  
+  const [inputVal, setInputVal] = useState('')
+
+  useEffect(() => {
+    localStorage.setItem('habits', JSON.stringify(habits))
+  }, [habits])
+
+  const addHabit = (e) => {
+    e.preventDefault()
+    if (!inputVal.trim()) return
+
+    const newHabit = {
+      id: Date.now(),
+      title: inputVal.trim(),
+      // Inizializza i 7 giorni come non completati
+      completedDays: [false, false, false, false, false, false, false]
+    }
+
+    setHabits([...habits, newHabit])
+    setInputVal('')
+  }
+
+  const toggleDay = (habitId, dayIndex) => {
+    setHabits(habits.map(habit => {
+      if (habit.id === habitId) {
+        const updatedDays = [...habit.completedDays]
+        updatedDays[dayIndex] = !updatedDays[dayIndex]
+        return { ...habit, completedDays: updatedDays }
+      }
+      return habit
+    }))
+  }
+
+  const deleteHabit = (id) => {
+    setHabits(habits.filter(habit => habit.id !== id))
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-container">
+      <h1>Habit Tracker</h1>
 
-      <div className="ticks"></div>
+      <form onSubmit={addHabit} className="habit-form">
+        <input
+          type="text"
+          placeholder="Nuova abitudine..."
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+        />
+        <button type="submit">Aggiungi</button>
+      </form>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <div className="habit-list">
+        {habits.length === 0 ? (
+          <p className="empty-msg">Nessuna abitudine inserita. Inizia aggiungendone una!</p>
+        ) : (
+          habits.map(habit => {
+            const completedCount = habit.completedDays.filter(Boolean).length
+            return (
+              <div key={habit.id} className="habit-card">
+                <div className="habit-header">
+                  <span className="habit-title">{habit.title}</span>
+                  <div className="habit-actions">
+                    <span className="streak-badge">{completedCount}/7</span>
+                    <button className="delete-btn" onClick={() => deleteHabit(habit.id)}>✕</button>
+                  </div>
+                </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+                <div className="week-grid">
+                  {DAYS.map((day, idx) => (
+                    <button
+                      key={idx}
+                      className={`day-btn ${habit.completedDays[idx] ? 'active' : ''}`}
+                      onClick={() => toggleDay(habit.id, idx)}
+                    >
+                      <span className="day-label">{day}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
   )
 }
 
