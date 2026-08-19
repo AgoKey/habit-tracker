@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 const DAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
+const FULL_DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
 
 function App() {
   const [habits, setHabits] = useState(() => {
@@ -53,7 +54,7 @@ function App() {
     }
   }
 
-  // Calcolo Percentuale Totale
+  // Calcoli Progresso e Statistiche
   const totalSlots = habits.length * 7
   const totalCompleted = habits.reduce((acc, habit) => {
     return acc + habit.completedDays.filter(Boolean).length
@@ -63,24 +64,47 @@ function App() {
     ? Math.round((totalCompleted / totalSlots) * 100) 
     : 0
 
+  // Calcolo Giorno Migliore
+  const dayCounts = DAYS.map((_, dayIdx) => {
+    return habits.reduce((acc, habit) => acc + (habit.completedDays[dayIdx] ? 1 : 0), 0)
+  })
+
+  const maxCount = Math.max(...dayCounts)
+  const bestDayIndex = dayCounts.indexOf(maxCount)
+  const bestDayName = (maxCount > 0 && bestDayIndex !== -1) ? FULL_DAYS[bestDayIndex] : '-'
+
   return (
     <div className="app-container">
       <h1>Habit Tracker</h1>
 
-      {/* Sezione Barra di Progresso */}
       {habits.length > 0 && (
-        <div className="progress-container">
-          <div className="progress-header">
-            <span>PROGRESSO SETTIMANALE</span>
-            <span className="progress-percentage">{progressPercentage}%</span>
+        <>
+          {/* Sezione Barra di Progresso */}
+          <div className="progress-container">
+            <div className="progress-header">
+              <span>PROGRESSO SETTIMANALE</span>
+              <span className="progress-percentage">{progressPercentage}%</span>
+            </div>
+            <div className="progress-bar-bg">
+              <div 
+                className="progress-bar-fill" 
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="progress-bar-bg">
-            <div 
-              className="progress-bar-fill" 
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
+
+          {/* Scheda Statistiche */}
+          <div className="stats-container">
+            <div className="stat-card">
+              <span className="stat-label">Completate Totali</span>
+              <span className="stat-value">{totalCompleted}</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-label">Giorno Migliore</span>
+              <span className="stat-value">{bestDayName}</span>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <form onSubmit={addHabit} className="habit-form">
@@ -126,7 +150,6 @@ function App() {
         )}
       </div>
 
-      {/* Pulsante Reset in Basso */}
       {habits.length > 0 && (
         <button className="reset-btn-large" onClick={resetWeek}>
           ↺ RESETTA SETTIMANA
