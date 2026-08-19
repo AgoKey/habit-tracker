@@ -11,8 +11,7 @@ html, body, #root {
 
 body {
   background-color: #ffffff;
-  color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #0d3b66;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,73 +29,109 @@ body {
 }
 
 h1 {
-  font-size: 3rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  margin: 0 0 2.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  margin: 0 0 2rem 0;
   text-transform: uppercase;
+  color: #0d3b66;
+}
+
+/* Barra di Progresso */
+.progress-container {
+  width: 100%;
+  margin-bottom: 2rem;
+  text-align: left;
+  color: #0d3b66;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.6rem;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 12px;
+  border: 1.5px solid #0d3b66;
+  border-radius: 20px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #0d3b66;
+  transition: width 0.3s ease;
 }
 
 /* Form di inserimento */
 .habit-form {
   display: flex;
   gap: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   width: 100%;
 }
 
 .habit-form input {
   flex: 1;
-  padding: 1.2rem 1.5rem;
-  border: 2px solid #000000;
+  padding: 1rem 1.2rem;
+  border: 1.5px solid #0d3b66;
   border-radius: 8px;
   background: #ffffff;
-  color: #000000;
-  font-size: 1.25rem;
-  font-weight: 500;
+  color: #0d3b66;
+  font-size: 1.05rem;
+  font-weight: 400;
   outline: none;
 }
 
 .habit-form button {
-  padding: 1.2rem 2rem;
-  background-color: #000000;
+  padding: 1rem 1.5rem;
+  background-color: #0d3b66;
   color: #ffffff;
-  border: 2px solid #000000;
+  border: 1.5px solid #0d3b66;
   border-radius: 8px;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .habit-form button:hover {
-  background-color: #333333;
+  opacity: 0.85;
 }
 
 /* Lista abitudini */
 .habit-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.2rem;
   width: 100%;
 }
 
 .empty-msg {
-  color: #666666;
-  font-size: 1.2rem;
+  color: #0d3b66;
+  opacity: 0.7;
+  font-size: 1.1rem;
+  font-weight: 300;
   margin: 2rem 0;
 }
 
 /* Card abitudine */
 .habit-card {
-  border: 2px solid #000000;
+  border: 1.5px solid #0d3b66;
   border-radius: 8px;
-  padding: 1.2rem 1.5rem;
+  padding: 1.2rem;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1rem;
   width: 100%;
 }
 
@@ -107,9 +142,9 @@ h1 {
 }
 
 .habit-title {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #000000;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #0d3b66;
 }
 
 .habit-actions {
@@ -119,11 +154,11 @@ h1 {
 }
 
 .streak-badge {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #000000;
-  background: #e5e5e5;
-  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0d3b66;
+  background: #e8f1f8;
+  padding: 0.3rem 0.7rem;
   border-radius: 6px;
 }
 
@@ -131,15 +166,15 @@ h1 {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #888888;
+  font-size: 1.1rem;
+  color: #0d3b66;
+  opacity: 0.4;
   padding: 0.2rem 0.5rem;
-  transition: color 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .delete-btn:hover {
-  color: #000000;
+  opacity: 1;
 }
 
 /* Griglia dei 7 giorni e Pulsanti */
@@ -151,11 +186,11 @@ h1 {
 }
 
 .day-btn {
-  border: 2px solid #000000;
+  border: 1.5px solid #0d3b66;
   background: #ffffff;
-  color: #000000;
+  color: #0d3b66;
   border-radius: 6px;
-  padding: 0.8rem 0;
+  padding: 0.7rem 0;
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -164,14 +199,14 @@ h1 {
 }
 
 .day-label {
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: #000000;
+  font-weight: 500;
+  font-size: 1rem;
+  color: #0d3b66;
   line-height: 1;
 }
 
 .day-btn.active {
-  background: #000000;
+  background: #0d3b66;
 }
 
 .day-btn.active .day-label {
@@ -179,5 +214,26 @@ h1 {
 }
 
 .day-btn:hover {
+  opacity: 0.85;
+}
+
+/* Pulsante Reset Grande in Basso */
+.reset-btn-large {
+  margin-top: 3.5rem;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background-color: #0d3b66;
+  color: #ffffff;
+  border: 1.5px solid #0d3b66;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.reset-btn-large:hover {
   opacity: 0.85;
 }
