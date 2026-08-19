@@ -1,212 +1,232 @@
-/* --- RESET E BASE --- */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html, body, #root {
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
-body {
-  background-color: #ffffff;
-  color: #0d3b66;
+body { 
+  margin: 0; 
+  font-family: sans-serif; 
+  background: #fff; 
+  color: #0d3b66; 
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Allineato in alto per evitare scroll strani */
-  padding-top: 2rem;
+  padding: 2.5rem 1rem; 
 }
 
-.app-container {
-  width: 100%;
-  max-width: 600px;
-  padding: 0 1.5rem;
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.app-container { 
+  width: 650px !important; /* Forza la larghezza esatta a 650 pixel */
+  margin: 0 auto !important;
+  display: flex !important; 
+  flex-direction: column !important; 
+  align-items: center !important; 
+  text-align: center !important;
 }
 
-/* --- TITOLO E FRASE --- */
-h1 {
-  font-size: 2.5rem;
-  font-weight: 300;
+h1 { 
+  font-size: 2.5rem; 
+  font-weight: 300; 
+  margin: 0 0 0.3rem; 
+  text-transform: uppercase; 
   letter-spacing: 0.1em;
-  margin: 0 0 0.5rem 0;
-  text-transform: uppercase;
-  color: #0d3b66;
+  white-space: nowrap; /* Impedisce al titolo di spezzarsi */
 }
 
-.motivational-quote {
+.subtitle { 
+  opacity: 0.6; 
+  margin: 0 0 1.5rem 0; 
   font-size: 0.95rem;
-  font-weight: 500;
-  color: #0d3b66;
-  opacity: 0.85;
-  font-style: italic;
-  margin-bottom: 2.5rem;
 }
 
-/* --- PROGRESSO E STATISTICHE --- */
-.progress-container {
-  width: 100%;
-  margin-bottom: 2rem;
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 500;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.6rem;
-}
-
-.progress-bar-bg {
-  width: 100%;
-  height: 12px;
-  border: 1.5px solid #0d3b66;
-  border-radius: 20px;
-  background: #ffffff;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: #0d3b66;
-  transition: width 0.3s ease;
-}
-
-.stats-bar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  margin-top: -1rem;
-  margin-bottom: 2.5rem;
-  padding: 0.8rem 1rem;
-  background-color: #f4f7f9;
-  border-radius: 6px;
-  font-size: 0.85rem;
-}
-
-.stat-item { display: flex; gap: 0.4rem; }
-.stat-value { font-weight: 700; }
-
-/* --- FORM E LISTA --- */
-/* Form di inserimento - Stile Minimalista */
-.habit-form {
-  display: flex;
-  gap: 0.5rem; /* Avviciniamo bottone e input */
-  margin-bottom: 3rem;
-  width: 100%;
-}
-
-.habit-form input {
-  flex: 1;
-  padding: 0.8rem 1rem;
-  border: 1px solid #d1d9e0; /* Bordo più sottile e chiaro */
-  border-radius: 6px;
-  background: #ffffff;
-  color: #0d3b66;
+.motivational-quote { 
+  font-style: italic; 
+  margin-bottom: 2rem; 
   font-size: 1rem;
-  transition: all 0.2s ease;
+}
+
+.progress-container { 
+  width: 100%; 
+  margin-bottom: 2rem; 
+}
+
+.progress-header { 
+  display: flex; 
+  justify-content: space-between; 
+  font-size: 0.8rem; 
+  margin-bottom: 0.5rem; 
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.progress-bar-bg { 
+  width: 100%; 
+  height: 10px; 
+  border: 1.5px solid #0d3b66; 
+  border-radius: 10px; 
+  overflow: hidden; 
+}
+
+.progress-bar-fill { 
+  height: 100%; 
+  background: #0d3b66; 
+  transition: width 0.3s; 
+}
+
+.stats-bar { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 1rem; 
+  width: 100%; 
+  margin-bottom: 2rem; 
+}
+
+.stat-item { 
+  border: 1.5px solid #0d3b66; 
+  border-radius: 8px; 
+  padding: 1rem; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  background: #fff;
+}
+
+.stat-label { 
+  font-size: 0.75rem; 
+  text-transform: uppercase; 
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+  opacity: 0.8;
+}
+
+.stat-value { 
+  font-size: 1.3rem; 
+  font-weight: 700; 
+}
+
+.habit-form { 
+  display: flex; 
+  gap: 0.8rem; 
+  width: 100%; 
+  margin-bottom: 2.5rem; 
+}
+
+.habit-form input { 
+  flex: 1; 
+  padding: 0.9rem 1.1rem; 
+  border: 1.5px solid #d1d9e0; 
+  border-radius: 8px; 
+  font-size: 1rem;
+  outline: none;
 }
 
 .habit-form input:focus {
   border-color: #0d3b66;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(13, 59, 102, 0.1); /* Effetto alone leggero */
 }
 
-.habit-form button {
-  padding: 0.8rem 1.2rem;
-  background-color: #0d3b66;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
+.habit-form button { 
+  padding: 0.9rem 1.5rem; 
+  background: #0d3b66; 
+  color: #fff; 
+  border: none; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  text-transform: uppercase; 
   font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  font-size: 0.9rem;
 }
 
-.habit-form button:hover {
-  background-color: #1a5a94;
+.habit-list { 
+  width: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1.2rem; 
 }
 
-.habit-list {
+.habit-card { 
+  border: 1.5px solid #0d3b66; 
+  padding: 1.2rem; 
+  border-radius: 8px; 
+  background: #fff;
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* Più spazio tra le card */
+  flex-direction: column; 
+  gap: 1rem;
   width: 100%;
 }
 
-.habit-card {
-  border: 1.5px solid #0d3b66;
-  border-radius: 8px;
-  padding: 1.2rem;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.habit-header {
-  display: flex;
-  justify-content: space-between;
+.habit-header { 
+  display: flex; 
+  justify-content: space-between; 
   align-items: center;
 }
 
+.habit-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.habit-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
 .streak-badge {
-  font-size: 0.9rem;
   background: #e8f1f8;
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-/* --- GRIGLIA GIORNI --- */
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-}
-
-.day-btn {
-  border: 1.5px solid #0d3b66;
-  background: #ffffff;
-  border-radius: 6px;
-  padding: 0.7rem 0;
+.delete-btn {
+  background: none;
+  border: none;
   cursor: pointer;
+  font-size: 1.1rem;
+  opacity: 0.4;
 }
 
-.day-btn.active { background: #0d3b66; color: #ffffff; }
-
-/* --- RESET --- */
-.reset-btn-large {
-  margin-top: 3.5rem;
-  width: 100%;
-  padding: 1rem;
-  background-color: #0d3b66;
-  color: #ffffff;
-  border-radius: 8px;
-  cursor: pointer;
-  text-transform: uppercase;
+.delete-btn:hover {
+  opacity: 1;
 }
-/* Sottotitolo Contatore */
-.subtitle {
-  color: #0d3b66;
-  opacity: 0.6;
+
+.week-grid { 
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); 
+  gap: 0.5rem; 
+}
+
+.day-btn { 
+  border: 1.5px solid #0d3b66; 
+  background: #fff; 
+  padding: 0.6rem 0; 
+  cursor: pointer; 
+  border-radius: 6px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.day-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.day-btn.active { 
+  background: #0d3b66; 
+}
+
+.day-btn.active .day-label {
+  color: #fff;
+}
+
+.reset-btn-large { 
+  margin-top: 3rem; 
+  width: 100%; 
+  padding: 1rem; 
+  background: #0d3b66; 
+  color: #fff; 
+  border: none; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  text-transform: uppercase; 
+  font-weight: 600;
   font-size: 0.9rem;
-  margin-top: -0.5rem;
-  margin-bottom: 2rem;
-}
-
-/* Feedback al passaggio del mouse sul titolo */
-.habit-header:hover .habit-title {
-  text-decoration: underline;
-  opacity: 0.7;
 }
