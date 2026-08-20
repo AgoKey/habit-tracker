@@ -4,6 +4,14 @@ import './App.css'
 const DAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
 const FULL_DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
 
+const CATEGORIES = [
+  { name: 'Generale', color: '#0d3b66' },
+  { name: 'Salute', color: '#2a9d8f' },
+  { name: 'Studio', color: '#9c89b8' },
+  { name: 'Lavoro', color: '#f4a261' },
+  { name: 'Personal', color: '#e76f51' }
+]
+
 function App() {
   const [habits, setHabits] = useState(() => {
     const saved = localStorage.getItem('habits')
@@ -18,6 +26,7 @@ function App() {
   const [inputVal, setInputVal] = useState('')
   const [targetVal, setTargetVal] = useState('')
   const [unitVal, setUnitVal] = useState('')
+  const [categoryVal, setCategoryVal] = useState('Generale')
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -41,6 +50,7 @@ function App() {
       title: inputVal.trim(),
       target: targetVal ? Number(targetVal) : null,
       unit: unitVal.trim() || '',
+      category: categoryVal,
       completedDays: [false, false, false, false, false, false, false]
     }
     setHabits([...habits, newHabit])
@@ -75,6 +85,38 @@ function App() {
       setHistory([weekRecord, ...history])
       setHabits(habits.map(habit => ({ ...habit, completedDays: Array(7).fill(false) })))
     }
+  }
+
+  // Funzioni Backup (Esporta/Importa)
+  const exportData = () => {
+    const data = JSON.stringify({ habits, history }, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `habit_tracker_backup_${new Date().toISOString().slice(0, 10)}.json`
+    link.click()
+  }
+
+  const importData = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result)
+        if (parsed.habits && parsed.history) {
+          setHabits(parsed.habits)
+          setHistory(parsed.history)
+          alert('Dati importati con successo!')
+        } else {
+          alert('File non valido.')
+        }
+      } catch {
+        alert('Errore durante la lettura del file.')
+      }
+    }
+    reader.readAsText(file)
   }
 
   const totalSlots = habits.length * 7
@@ -132,35 +174,46 @@ function App() {
           />
           <input 
             type="text" 
-            placeholder="Unità (es. ml, pagine, min)" 
+            placeholder="Unità (es. ml)" 
             value={unitVal} 
             onChange={(e) => setUnitVal(e.target.value)} 
           />
+          <select value={categoryVal} onChange={(e) => setCategoryVal(e.target.value)} className="category-select">
+            {CATEGORIES.map(cat => (
+              <option key={cat.name} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>
         </div>
       </form>
 
       <div className="habit-list">
-        {habits.map(habit => (
-          <div key={habit.id} className="habit-card">
-            <div className="habit-header">
-              <div className="title-group">
-                <span className="habit-title">{habit.title}</span>
-                {habit.target && <span className="target-badge">🎯 {habit.target} {habit.unit}</span>}
+        {habits.map(habit => {
+          const categoryObj = CATEGORIES.find(c => c.name === habit.category) || CATEGORIES[0]
+          return (
+            <div key={habit.id} className="habit-card" style={{ borderLeft: `5px solid ${categoryObj.color}` }}>
+              <div className="habit-header">
+                <div className="title-group">
+                  <span className="habit-title">{habit.title}</span>
+                  <span className="category-badge" style={{ background: `${categoryObj.color}20`, color: categoryObj.color }}>
+                    {habit.category || 'Generale'}
+                  </span>
+                  {habit.target && <span className="target-badge">🎯 {habit.target} {habit.unit}</span>}
+                </div>
+                <div className="habit-actions">
+                  <span className="streak-badge">{habit.completedDays.filter(Boolean).length}/7</span>
+                  <button className="delete-btn" onClick={() => deleteHabit(habit.id)}>✕</button>
+                </div>
               </div>
-              <div className="habit-actions">
-                <span className="streak-badge">{habit.completedDays.filter(Boolean).length}/7</span>
-                <button className="delete-btn" onClick={() => deleteHabit(habit.id)}>✕</button>
+              <div className="week-grid">
+                {DAYS.map((day, idx) => (
+                  <button key={idx} className={`day-btn ${habit.completedDays[idx] ? 'active' : ''}`} onClick={() => toggleDay(habit.id, idx)}>
+                    <span className="day-label">{day}</span>
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="week-grid">
-              {DAYS.map((day, idx) => (
-                <button key={idx} className={`day-btn ${habit.completedDays[idx] ? 'active' : ''}`} onClick={() => toggleDay(habit.id, idx)}>
-                  <span className="day-label">{day}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {history.length > 0 && (
@@ -179,9 +232,18 @@ function App() {
 
       {habits.length > 0 && (
         <button className="reset-btn-large" onClick={archiveAndResetWeek}>
-          📦 ARCHIVIA E RESETTA SETTIMANA
+           ARCHIVIA E RESETTA SETTIMANA
         </button>
       )}
+
+      {/* Sezione Backup */}
+      <div className="backup-actions">
+        <button className="backup-btn" onClick={exportData}>📥 Esporta Backup</button>
+        <label className="backup-btn">
+          📤 Importa Backup
+          <input type="file" accept=".json" onChange={importData} hidden />
+        </label>
+      </div>
     </div>
   )
 }
