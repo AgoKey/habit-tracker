@@ -1,251 +1,639 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import { useEffect, useState } from 'react';
+import './App.css';
 
-const DAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
-const FULL_DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
+const DAYS_OF_WEEK = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
 
-const CATEGORIES = [
-  { name: 'Generale', color: '#0d3b66' },
-  { name: 'Salute', color: '#2a9d8f' },
-  { name: 'Studio', color: '#9c89b8' },
-  { name: 'Lavoro', color: '#f4a261' },
-  { name: 'Personal', color: '#e76f51' }
-]
+const EMPTY_WEEK = () => Array(7).fill(false);
 
 function App() {
   const [habits, setHabits] = useState(() => {
-    const saved = localStorage.getItem('habits')
-    return saved ? JSON.parse(saved) : []
-  })
-  
-  const [history, setHistory] = useState(() => {
-    const savedHistory = localStorage.getItem('habits_history')
-    return savedHistory ? JSON.parse(savedHistory) : []
-  })
+    try {
+      const savedHabits = localStorage.getItem('habits');
 
-  const [inputVal, setInputVal] = useState('')
-  const [targetVal, setTargetVal] = useState('')
-  const [unitVal, setUnitVal] = useState('')
-  const [categoryVal, setCategoryVal] = useState('Generale')
-  const [now, setNow] = useState(new Date())
+      if (!savedHabits) {
+        return [];
+      }
 
+      const parsedHabits = JSON.parse(savedHabits);
+
+      return Array.isArray(parsedHabits) ? parsedHabits : [];
+    } catch (error) {
+      console.error(
+        'Errore durante il caricamento delle abitudini:',
+        error
+      );
+
+      return [];
+    }
+  });
+
+  const [inputTitle, setInputTitle] = useState('');
+  const [inputTarget, setInputTarget] = useState(7);
+  const [inputCategory, setInputCategory] = useState('Generale');
+
+  /*
+   * Salvataggio automatico nel localStorage
+   */
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
+    try {
+      localStorage.setItem('habits', JSON.stringify(habits));
+    } catch (error) {
+      console.error(
+        'Errore durante il salvataggio delle abitudini:',
+        error
+      );
+    }
+  }, [habits]);
 
-  useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits))
-  }, [habits])
+  /*
+   * Aggiunta nuova abitudine
+   */
+  const addHabit = (event) => {
+    event.preventDefault();
 
-  useEffect(() => {
-    localStorage.setItem('habits_history', JSON.stringify(history))
-  }, [history])
+    const title = inputTitle.trim();
+    const category = inputCategory.trim() || 'Generale';
+    const target = Number(inputTarget);
 
-  const addHabit = (e) => {
-    e.preventDefault()
-    if (!inputVal.trim()) return
+    if (!title) {
+      return;
+    }
+
     const newHabit = {
-      id: crypto.randomUUID(),
-      title: inputVal.trim(),
-      target: targetVal ? Number(targetVal) : null,
-      unit: unitVal.trim() || '',
-      category: categoryVal,
-      completedDays: [false, false, false, false, false, false, false]
-    }
-    setHabits([...habits, newHabit])
-    setInputVal('')
-    setTargetVal('')
-    setUnitVal('')
-  }
+      id: Date.now(),
+      title,
+      target:
+        Number.isInteger(target) && target >= 1 && target <= 7
+          ? target
+          : 7,
+      category,
+      completedDays: EMPTY_WEEK(),
+    };
 
+    setHabits((previousHabits) => [
+      ...previousHabits,
+      newHabit,
+    ]);
+
+    setInputTitle('');
+  };
+
+  /*
+   * Selezione/deselezione giorno
+   */
   const toggleDay = (habitId, dayIndex) => {
-    setHabits(habits.map(habit => {
-      if (habit.id === habitId) {
-        const updatedDays = [...habit.completedDays]
-        updatedDays[dayIndex] = !updatedDays[dayIndex]
-        return { ...habit, completedDays: updatedDays }
-      }
-      return habit
-    }))
-  }
-
-  const deleteHabit = (id) => {
-    setHabits(habits.filter(habit => habit.id !== id))
-  }
-
-  const archiveAndResetWeek = () => {
-    if (window.confirm('Vuoi archiviare questa settimana nello storico e iniziare una nuova?')) {
-      const today = new Date()
-      const weekRecord = {
-        id: crypto.randomUUID(),
-        date: today.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' }),
-        score: progressPercentage
-      }
-      setHistory([weekRecord, ...history])
-      setHabits(habits.map(habit => ({ ...habit, completedDays: Array(7).fill(false) })))
-    }
-  }
-
-  // Funzioni Backup (Esporta/Importa)
-  const exportData = () => {
-    const data = JSON.stringify({ habits, history }, null, 2)
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `habit_tracker_backup_${new Date().toISOString().slice(0, 10)}.json`
-    link.click()
-  }
-
-  const importData = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target.result)
-        if (parsed.habits && parsed.history) {
-          setHabits(parsed.habits)
-          setHistory(parsed.history)
-          alert('Dati importati con successo!')
-        } else {
-          alert('File non valido.')
+    setHabits((previousHabits) =>
+      previousHabits.map((habit) => {
+        if (habit.id !== habitId) {
+          return habit;
         }
-      } catch {
-        alert('Errore durante la lettura del file.')
-      }
+
+        const completedDays = Array.isArray(habit.completedDays)
+          ? [...habit.completedDays]
+          : EMPTY_WEEK();
+
+        completedDays[dayIndex] = !completedDays[dayIndex];
+
+        return {
+          ...habit,
+          completedDays,
+        };
+      })
+    );
+  };
+
+  /*
+   * Eliminazione abitudine
+   */
+  const deleteHabit = (habitId) => {
+    setHabits((previousHabits) =>
+      previousHabits.filter(
+        (habit) => habit.id !== habitId
+      )
+    );
+  };
+
+  /*
+   * Reset settimana
+   */
+  const resetWeek = () => {
+    const confirmed = window.confirm(
+      'Sei sicuro di voler resettare i progressi della settimana?'
+    );
+
+    if (!confirmed) {
+      return;
     }
-    reader.readAsText(file)
-  }
 
-  const totalSlots = habits.length * 7
-  const totalCompleted = habits.reduce((acc, habit) => acc + habit.completedDays.filter(Boolean).length, 0)
-  const progressPercentage = totalSlots > 0 ? Math.round((totalCompleted / totalSlots) * 100) : 0
-  
-  const dayCounts = DAYS.map((_, dayIdx) => habits.reduce((acc, habit) => acc + (habit.completedDays[dayIdx] ? 1 : 0), 0))
-  const maxCount = Math.max(...dayCounts)
-  const bestDayIndex = dayCounts.indexOf(maxCount)
-  const bestDayName = (maxCount > 0 && bestDayIndex !== -1) ? FULL_DAYS[bestDayIndex] : '-'
+    setHabits((previousHabits) =>
+      previousHabits.map((habit) => ({
+        ...habit,
+        completedDays: EMPTY_WEEK(),
+      }))
+    );
+  };
 
-  const formattedDate = now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  const formattedTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  /*
+   * Esportazione backup
+   */
+  const exportBackup = () => {
+    try {
+      const jsonData = JSON.stringify(habits, null, 2);
+
+      const blob = new Blob([jsonData], {
+        type: 'application/json',
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      const downloadAnchor = document.createElement('a');
+
+      downloadAnchor.href = url;
+      downloadAnchor.download = `habits_backup_${new Date()
+        .toISOString()
+        .slice(0, 10)}.json`;
+
+      document.body.appendChild(downloadAnchor);
+
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(
+        'Errore durante la creazione del backup:',
+        error
+      );
+
+      window.alert(
+        'Si è verificato un errore durante la creazione del backup.'
+      );
+    }
+  };
+
+  /*
+   * Importazione backup
+   */
+  const importBackup = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const fileReader = new FileReader();
+
+    fileReader.onload = (readerEvent) => {
+      try {
+        const parsedData = JSON.parse(
+          readerEvent.target?.result
+        );
+
+        if (!Array.isArray(parsedData)) {
+          throw new Error(
+            'Il contenuto del backup non è un array.'
+          );
+        }
+
+        /*
+         * Normalizziamo i dati importati.
+         * In questo modo anche vecchi backup continuano
+         * a funzionare.
+         */
+        const normalizedHabits = parsedData
+          .filter(
+            (habit) =>
+              habit &&
+              typeof habit === 'object' &&
+              typeof habit.title === 'string'
+          )
+          .map((habit, index) => {
+            const completedDays =
+              Array.isArray(habit.completedDays)
+                ? Array.from(
+                    { length: 7 },
+                    (_, dayIndex) =>
+                      Boolean(
+                        habit.completedDays[dayIndex]
+                      )
+                  )
+                : EMPTY_WEEK();
+
+            const target = Number(habit.target);
+
+            return {
+              id:
+                habit.id ??
+                `${Date.now()}-${index}`,
+              title: habit.title.trim(),
+              category:
+                typeof habit.category === 'string' &&
+                habit.category.trim()
+                  ? habit.category.trim()
+                  : 'Generale',
+              target:
+                Number.isInteger(target) &&
+                target >= 1 &&
+                target <= 7
+                  ? target
+                  : 7,
+              completedDays,
+            };
+          });
+
+        setHabits(normalizedHabits);
+
+        window.alert(
+          'Backup importato con successo!'
+        );
+      } catch (error) {
+        console.error(
+          'Errore durante l’importazione:',
+          error
+        );
+
+        window.alert(
+          'Il file selezionato non contiene un backup valido.'
+        );
+      } finally {
+        /*
+         * Permette di riselezionare anche lo stesso file.
+         */
+        event.target.value = '';
+      }
+    };
+
+    fileReader.onerror = () => {
+      window.alert(
+        'Errore durante la lettura del file.'
+      );
+
+      event.target.value = '';
+    };
+
+    fileReader.readAsText(file, 'UTF-8');
+  };
+
+  /*
+   * Statistiche
+   */
+
+  const totalCompletions = habits.reduce(
+    (total, habit) => {
+      if (!Array.isArray(habit.completedDays)) {
+        return total;
+      }
+
+      return (
+        total +
+        habit.completedDays.filter(Boolean).length
+      );
+    },
+    0
+  );
+
+  const totalTarget = habits.reduce(
+    (total, habit) =>
+      total + (Number(habit.target) || 0),
+    0
+  );
+
+  /*
+   * Per il progresso settimanale contiamo al massimo
+   * il target di ogni singola abitudine.
+   *
+   * Esempio:
+   * target = 3
+   * giorni selezionati = 5
+   * contributo al progresso = 3, non 5.
+   */
+  const completedTowardTarget = habits.reduce(
+    (total, habit) => {
+      const completed = Array.isArray(
+        habit.completedDays
+      )
+        ? habit.completedDays.filter(Boolean).length
+        : 0;
+
+      const target = Number(habit.target) || 0;
+
+      return total + Math.min(completed, target);
+    },
+    0
+  );
+
+  const progressPercentage =
+    totalTarget > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (completedTowardTarget / totalTarget) *
+              100
+          )
+        )
+      : 0;
+
+  const formattedDate = new Date().toLocaleDateString(
+    'it-IT',
+    {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }
+  );
 
   return (
-    <div className="app-container">
+    <main className="app-container">
+      {/* DATA */}
       <div className="datetime-badge">
-        <span>{formattedDate}</span> • <strong>{formattedTime}</strong>
+        {formattedDate}
       </div>
 
+      {/* HEADER */}
       <h1>Habit Tracker</h1>
-      <p className="subtitle">Stai monitorando {habits.length} abitudini</p>
 
-      {habits.length > 0 && (
-        <>
-          <div className="progress-container">
-            <div className="progress-header"><span>PROGRESSO SETTIMANA</span><span>{progressPercentage}%</span></div>
-            <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: `${progressPercentage}%` }}></div></div>
-          </div>
-          <div className="stats-bar">
-            <div className="stat-item"><span className="stat-label">Completate</span><span className="stat-value">{totalCompleted}</span></div>
-            <div className="stat-item"><span className="stat-label">Giorno Top</span><span className="stat-value">{bestDayName}</span></div>
-          </div>
-        </>
-      )}
+      <p className="subtitle">
+        Costruisci la tua routine giorno dopo giorno
+      </p>
 
-      <form onSubmit={addHabit} className="habit-form-extended">
-        <div className="form-main-row">
-          <input 
-            type="text" 
-            placeholder="Cosa vuoi fare? (es. Bere acqua)" 
-            value={inputVal} 
-            onChange={(e) => setInputVal(e.target.value)} 
-            required 
-          />
-          <button type="submit">Aggiungi</button>
+      {/* PROGRESSO */}
+      <section className="progress-container">
+        <div className="progress-header">
+          <span>Obiettivo settimanale</span>
+          <span>{progressPercentage}%</span>
         </div>
-        
+
+        <div className="progress-bar-bg">
+          <div
+            className="progress-bar-fill"
+            style={{
+              width: `${progressPercentage}%`,
+            }}
+          />
+        </div>
+      </section>
+
+      {/* STATISTICHE */}
+      <section className="stats-bar">
+        <div className="stat-item">
+          <span className="stat-label">
+            Abitudini
+          </span>
+
+          <span className="stat-value">
+            {habits.length}
+          </span>
+        </div>
+
+        <div className="stat-item">
+          <span className="stat-label">
+            Completate
+          </span>
+
+          <span className="stat-value">
+            {totalCompletions}
+          </span>
+        </div>
+
+        <div className="stat-item">
+          <span className="stat-label">
+            Obiettivo
+          </span>
+
+          <span className="stat-value">
+            {totalTarget}
+          </span>
+        </div>
+      </section>
+
+      {/* FORM AGGIUNTA ABITUDINE */}
+      <form
+        onSubmit={addHabit}
+        className="habit-form-extended"
+      >
+        <div className="form-main-row">
+          <input
+            type="text"
+            placeholder="Nuova abitudine..."
+            value={inputTitle}
+            onChange={(event) =>
+              setInputTitle(event.target.value)
+            }
+            maxLength={60}
+          />
+
+          <button type="submit">
+            Aggiungi
+          </button>
+        </div>
+
         <div className="form-details-row">
-          <input 
-            type="number" 
-            placeholder="Obiettivo (es. 2000)" 
-            value={targetVal} 
-            onChange={(e) => setTargetVal(e.target.value)} 
-          />
-          <input 
-            type="text" 
-            placeholder="Unità (es. ml)" 
-            value={unitVal} 
-            onChange={(e) => setUnitVal(e.target.value)} 
-          />
-          <select value={categoryVal} onChange={(e) => setCategoryVal(e.target.value)} className="category-select">
-            {CATEGORIES.map(cat => (
-              <option key={cat.name} value={cat.name}>{cat.name}</option>
-            ))}
+          <select
+            value={inputTarget}
+            onChange={(event) =>
+              setInputTarget(
+                Number(event.target.value)
+              )
+            }
+            aria-label="Obiettivo settimanale"
+          >
+            {[1, 2, 3, 4, 5, 6, 7].map(
+              (number) => (
+                <option
+                  key={number}
+                  value={number}
+                >
+                  {number}{' '}
+                  {number === 1
+                    ? 'giorno'
+                    : 'giorni'}{' '}
+                  / sett
+                </option>
+              )
+            )}
           </select>
+
+          <input
+            type="text"
+            placeholder="Categoria (es. Salute)"
+            value={inputCategory}
+            onChange={(event) =>
+              setInputCategory(
+                event.target.value
+              )
+            }
+            maxLength={30}
+          />
         </div>
       </form>
 
-      <div className="habit-list">
-        {habits.map(habit => {
-          const categoryObj = CATEGORIES.find(c => c.name === habit.category) || CATEGORIES[0]
-          return (
-            <div key={habit.id} className="habit-card" style={{ borderLeft: `5px solid ${categoryObj.color}` }}>
-              <div className="habit-header">
-                <div className="title-group">
-                  <span className="habit-title">{habit.title}</span>
-                  <span className="category-badge" style={{ background: `${categoryObj.color}20`, color: categoryObj.color }}>
-                    {habit.category || 'Generale'}
-                  </span>
-                  {habit.target && <span className="target-badge">🎯 {habit.target} {habit.unit}</span>}
-                </div>
-                <div className="habit-actions">
-                  <span className="streak-badge">{habit.completedDays.filter(Boolean).length}/7</span>
-                  <button className="delete-btn" onClick={() => deleteHabit(habit.id)}>✕</button>
-                </div>
-              </div>
-              <div className="week-grid">
-                {DAYS.map((day, idx) => (
-                  <button key={idx} className={`day-btn ${habit.completedDays[idx] ? 'active' : ''}`} onClick={() => toggleDay(habit.id, idx)}>
-                    <span className="day-label">{day}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* LISTA ABITUDINI */}
+      <section className="habit-list">
+        {habits.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">
+              ✓
+            </span>
 
-      {history.length > 0 && (
-        <div className="history-section">
-          <h3>📜 Storico Settimane Passate</h3>
-          <div className="history-list">
-            {history.map(item => (
-              <div key={item.id} className="history-item">
-                <span>Settimana del {item.date}</span>
-                <strong>{item.score}% Completato</strong>
-              </div>
-            ))}
+            <p>
+              Non hai ancora aggiunto
+              abitudini.
+            </p>
+
+            <small>
+              Inserisci la prima abitudine
+              qui sopra.
+            </small>
           </div>
-        </div>
-      )}
+        ) : (
+          habits.map((habit) => {
+            const currentCount =
+              Array.isArray(
+                habit.completedDays
+              )
+                ? habit.completedDays.filter(
+                    Boolean
+                  ).length
+                : 0;
 
+            const targetValue =
+              Number(habit.target) || 7;
+
+            const goalReached =
+              currentCount >= targetValue;
+
+            return (
+              <article
+                key={habit.id}
+                className={`habit-card ${
+                  goalReached
+                    ? 'goal-reached'
+                    : ''
+                }`}
+              >
+                <div className="habit-header">
+                  <div className="title-group">
+                    <span className="habit-title">
+                      {habit.title}
+                    </span>
+
+                    <span className="target-badge">
+                      {habit.category ||
+                        'Generale'}
+                    </span>
+                  </div>
+
+                  <div className="habit-actions">
+                    <span
+                      className={`streak-badge ${
+                        goalReached
+                          ? 'completed'
+                          : ''
+                      }`}
+                    >
+                      🎯 {currentCount}/
+                      {targetValue}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={() =>
+                        deleteHabit(
+                          habit.id
+                        )
+                      }
+                      aria-label={`Elimina ${habit.title}`}
+                      title="Elimina abitudine"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div className="week-grid">
+                  {DAYS_OF_WEEK.map(
+                    (day, index) => {
+                      const isCompleted =
+                        Boolean(
+                          habit
+                            .completedDays?.[
+                            index
+                          ]
+                        );
+
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          className={`day-btn ${
+                            isCompleted
+                              ? 'active'
+                              : ''
+                          }`}
+                          onClick={() =>
+                            toggleDay(
+                              habit.id,
+                              index
+                            )
+                          }
+                          aria-pressed={
+                            isCompleted
+                          }
+                        >
+                          {day}
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+              </article>
+            );
+          })
+        )}
+      </section>
+
+      {/* RESET SETTIMANA */}
       {habits.length > 0 && (
-        <button className="reset-btn-large" onClick={archiveAndResetWeek}>
-           ARCHIVIA E RESETTA SETTIMANA
+        <button
+          type="button"
+          className="reset-btn-large"
+          onClick={resetWeek}
+        >
+          RESETTA SETTIMANA
         </button>
       )}
 
-      {/* Sezione Backup */}
-      <div className="backup-actions">
-        <button className="backup-btn" onClick={exportData}>📥 Esporta Backup</button>
-        <label className="backup-btn">
-          📤 Importa Backup
-          <input type="file" accept=".json" onChange={importData} hidden />
+      {/* BACKUP */}
+      <section className="backup-section">
+        <button
+          type="button"
+          className="backup-btn"
+          onClick={exportBackup}
+          disabled={habits.length === 0}
+        >
+          <span>📥</span>
+          Esporta Backup
+        </button>
+
+        <label
+          htmlFor="import-file"
+          className="backup-btn import-btn"
+        >
+          <span>📤</span>
+          Importa Backup
         </label>
-      </div>
-    </div>
-  )
+
+        <input
+          type="file"
+          id="import-file"
+          className="import-file-input"
+          onChange={importBackup}
+          accept=".json,application/json"
+        />
+      </section>
+    </main>
+  );
 }
 
-export default App
+export default App;
