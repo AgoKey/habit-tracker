@@ -6,26 +6,47 @@ const FULL_DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 
 
 function App() {
   const [habits, setHabits] = useState(() => {
-    const savedHabits = localStorage.getItem('habits')
-    return savedHabits ? JSON.parse(savedHabits) : []
+    const saved = localStorage.getItem('habits')
+    return saved ? JSON.parse(saved) : []
   })
   
+  const [history, setHistory] = useState(() => {
+    const savedHistory = localStorage.getItem('habits_history')
+    return savedHistory ? JSON.parse(savedHistory) : []
+  })
+
   const [inputVal, setInputVal] = useState('')
+  const [targetVal, setTargetVal] = useState('')
+  const [unitVal, setUnitVal] = useState('')
+  const [now, setNow] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     localStorage.setItem('habits', JSON.stringify(habits))
   }, [habits])
 
+  useEffect(() => {
+    localStorage.setItem('habits_history', JSON.stringify(history))
+  }, [history])
+
   const addHabit = (e) => {
     e.preventDefault()
     if (!inputVal.trim()) return
     const newHabit = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       title: inputVal.trim(),
+      target: targetVal ? Number(targetVal) : null,
+      unit: unitVal.trim() || '',
       completedDays: [false, false, false, false, false, false, false]
     }
     setHabits([...habits, newHabit])
     setInputVal('')
+    setTargetVal('')
+    setUnitVal('')
   }
 
   const toggleDay = (habitId, dayIndex) => {
@@ -39,22 +60,19 @@ function App() {
     }))
   }
 
-  const toggleAll = (habitId) => {
-    setHabits(habits.map(habit => {
-      if (habit.id === habitId) {
-        const allChecked = habit.completedDays.every(Boolean);
-        return { ...habit, completedDays: Array(7).fill(!allChecked) };
-      }
-      return habit
-    }))
-  }
-
   const deleteHabit = (id) => {
     setHabits(habits.filter(habit => habit.id !== id))
   }
 
-  const resetWeek = () => {
-    if (window.confirm('Vuoi davvero azzerare i progressi?')) {
+  const archiveAndResetWeek = () => {
+    if (window.confirm('Vuoi archiviare questa settimana nello storico e iniziare una nuova?')) {
+      const today = new Date()
+      const weekRecord = {
+        id: crypto.randomUUID(),
+        date: today.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' }),
+        score: progressPercentage
+      }
+      setHistory([weekRecord, ...history])
       setHabits(habits.map(habit => ({ ...habit, completedDays: Array(7).fill(false) })))
     }
   }
@@ -68,22 +86,22 @@ function App() {
   const bestDayIndex = dayCounts.indexOf(maxCount)
   const bestDayName = (maxCount > 0 && bestDayIndex !== -1) ? FULL_DAYS[bestDayIndex] : '-'
 
-  const getMsg = () => {
-    if (habits.length === 0) return 'Inizia aggiungendo la tua prima abitudine!'
-    if (progressPercentage === 100) return 'Sei imbattibile! 🎉'
-    return progressPercentage > 50 ? 'Ottimo ritmo, continua così!' : 'Un passo alla volta!'
-  }
+  const formattedDate = now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const formattedTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
   return (
     <div className="app-container">
+      <div className="datetime-badge">
+        <span>{formattedDate}</span> • <strong>{formattedTime}</strong>
+      </div>
+
       <h1>Habit Tracker</h1>
       <p className="subtitle">Stai monitorando {habits.length} abitudini</p>
-      <p className="motivational-quote">{getMsg()}</p>
 
       {habits.length > 0 && (
         <>
           <div className="progress-container">
-            <div className="progress-header"><span>PROGRESSO</span><span>{progressPercentage}%</span></div>
+            <div className="progress-header"><span>PROGRESSO SETTIMANA</span><span>{progressPercentage}%</span></div>
             <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: `${progressPercentage}%` }}></div></div>
           </div>
           <div className="stats-bar">
@@ -93,19 +111,45 @@ function App() {
         </>
       )}
 
-      <form onSubmit={addHabit} className="habit-form">
-        <input type="text" placeholder="Nuova abitudine..." value={inputVal} onChange={(e) => setInputVal(e.target.value)} />
-        <button type="submit">Aggiungi</button>
+      <form onSubmit={addHabit} className="habit-form-extended">
+        <div className="form-main-row">
+          <input 
+            type="text" 
+            placeholder="Cosa vuoi fare? (es. Bere acqua)" 
+            value={inputVal} 
+            onChange={(e) => setInputVal(e.target.value)} 
+            required 
+          />
+          <button type="submit">Aggiungi</button>
+        </div>
+        
+        <div className="form-details-row">
+          <input 
+            type="number" 
+            placeholder="Obiettivo (es. 2000)" 
+            value={targetVal} 
+            onChange={(e) => setTargetVal(e.target.value)} 
+          />
+          <input 
+            type="text" 
+            placeholder="Unità (es. ml, pagine, min)" 
+            value={unitVal} 
+            onChange={(e) => setUnitVal(e.target.value)} 
+          />
+        </div>
       </form>
 
       <div className="habit-list">
         {habits.map(habit => (
           <div key={habit.id} className="habit-card">
-            <div className="habit-header" onClick={() => toggleAll(habit.id)} style={{ cursor: 'pointer' }}>
-              <span className="habit-title">{habit.title}</span>
+            <div className="habit-header">
+              <div className="title-group">
+                <span className="habit-title">{habit.title}</span>
+                {habit.target && <span className="target-badge">🎯 {habit.target} {habit.unit}</span>}
+              </div>
               <div className="habit-actions">
                 <span className="streak-badge">{habit.completedDays.filter(Boolean).length}/7</span>
-                <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteHabit(habit.id) }}>✕</button>
+                <button className="delete-btn" onClick={() => deleteHabit(habit.id)}>✕</button>
               </div>
             </div>
             <div className="week-grid">
@@ -119,8 +163,27 @@ function App() {
         ))}
       </div>
 
-      {habits.length > 0 && <button className="reset-btn-large" onClick={resetWeek}>↺ RESETTA SETTIMANA</button>}
+      {history.length > 0 && (
+        <div className="history-section">
+          <h3>📜 Storico Settimane Passate</h3>
+          <div className="history-list">
+            {history.map(item => (
+              <div key={item.id} className="history-item">
+                <span>Settimana del {item.date}</span>
+                <strong>{item.score}% Completato</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {habits.length > 0 && (
+        <button className="reset-btn-large" onClick={archiveAndResetWeek}>
+          📦 ARCHIVIA E RESETTA SETTIMANA
+        </button>
+      )}
     </div>
   )
 }
+
 export default App
